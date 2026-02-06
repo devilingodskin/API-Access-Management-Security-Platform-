@@ -25,28 +25,28 @@
 
 ```mermaid
 flowchart LR
-    Dev["Разработчик / DevOps"] -->|Self-service запросы, API-вызовы| SoIHub
-    Sec["ИБ-аналитик / Аудитор"] -->|Approval, расследования, отчеты| SoIHub
-    SoIHub -->|Статусы заявок, выдача credential, отчеты| Dev
-    SoIHub -->|Audit trails, incident evidence| Sec
+    Dev["Разработчик / DevOps"] -->|"Self-service requests and API calls"| SoIHub
+    Sec["ИБ-аналитик / Аудитор"] -->|"Approvals, investigations, reports"| SoIHub
+    SoIHub -->|"Request statuses and credentials"| Dev
+    SoIHub -->|"Audit trails and incident evidence"| Sec
 
-    IdP["IdP / SSO"] -->|OIDC/SAML claims, MFA state| SoIHub
-    SoIHub -->|Session/AuthZ validation| IdP
+    IdP["IdP / SSO"] -->|"OIDC/SAML claims and MFA state"| SoIHub
+    SoIHub -->|"Session and AuthZ validation"| IdP
 
-    GW["API Gateway"] -->|Introspection, access checks| SoIHub
-    SoIHub -->|Политики, revoke, metadata| GW
+    GW["API Gateway"] -->|"Introspection and access checks"| SoIHub
+    SoIHub -->|"Policies, revoke, metadata"| GW
 
-    Vault["Secrets Vault"] -->|Secret version metadata, status| SoIHub
-    SoIHub -->|Store/rotate/revoke secret| Vault
+    Vault["Secrets Vault"] -->|"Secret metadata and status"| SoIHub
+    SoIHub -->|"Store, rotate, revoke secret"| Vault
 
-    SIEM["SIEM / Log Platform"] -->|Incident tags, lookup| SoIHub
-    SoIHub -->|Security events, alerts, audit stream| SIEM
+    SIEM["SIEM / Log Platform"] -->|"Incident tags and lookup"| SoIHub
+    SoIHub -->|"Security events, alerts, audit stream"| SIEM
 
-    Mail["Mail / Notify"] -->|Delivery status, failures| SoIHub
-    SoIHub -->|Notifications (approval/rotation/incidents)| Mail
+    Mail["Mail / Notify"] -->|"Delivery status and failures"| SoIHub
+    SoIHub -->|"Notifications: approvals, rotations, incidents"| Mail
 
-    BI["BI / Analytics (optional)"] -->|KPI queries| SoIHub
-    SoIHub -->|Aggregated access/rotation/SLA datasets| BI
+    BI["BI / Analytics (optional)"] -->|"KPI queries"| SoIHub
+    SoIHub -->|"Aggregated access, rotation, SLA data"| BI
 
     subgraph SoI["System of Interest: API Access Management"]
         SoIHub["Access Management Platform (SoI Hub)"]
