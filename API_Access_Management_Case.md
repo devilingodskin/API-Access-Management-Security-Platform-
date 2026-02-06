@@ -6,69 +6,64 @@
 
 ### 1.1 Цель системы (миссия)
 
-Система API Access Management должна обеспечивать self-service выдачу и управление API-доступом для внутренних команд разработки без потери контроля ИБ, с гарантируемой трассируемостью действий, управляемым жизненным циклом секретов и проверяемыми политиками доступа.
+Система API Access Management должна обеспечивать self-service выдачу и управление API-доступом для внутренних команд и внешних партнёров в multi-tenant контуре без потери контроля ИБ, с гарантируемой трассируемостью действий, управляемым жизненным циклом секретов и проверяемыми политиками доступа.
 
 ### 1.2 Контекст (среда и внешние системы)
 
-1. Эксплуатационная среда: enterprise B2B-платформа, единый IdP/SSO, внутренние API-продукты.
+1. Эксплуатационная среда: enterprise B2B-платформа, гибридный контур внутренних API и B2B-партнерских интеграций, федеративный IdP/SSO.
 2. Операционный контур: Platform Engineering + DevOps + Security Operations.
 3. Каналы взаимодействия:
    1. UI self-service портал.
    2. Сервисные API для CI/CD.
    3. Событийная интеграция для аудита и мониторинга.
 4. Ключевые ограничения:
-   1. Только внутренние команды одной организации.
+   1. Multi-tenant модель: внутренние команды и внешние партнёры с жёсткой tenant-изоляцией.
    2. Централизованные политики и approval flow для критичных изменений.
    3. Интеграции с внешними компонентами обязательны: SSO, Gateway, Vault, SIEM, Mail.
 
 ### 1.3 Контекстная диаграмма (L0: SoI ↔ внешние сущности)
 
-```mermaid
-flowchart LR
-    Dev["Разработчик / DevOps"] -->|"Self-service requests and API calls"| SoIHub
-    Sec["ИБ-аналитик / Аудитор"] -->|"Approvals, investigations, reports"| SoIHub
-    SoIHub -->|"Request statuses and credentials"| Dev
-    SoIHub -->|"Audit trails and incident evidence"| Sec
+Сгенерированная контекстная диаграмма (как в примере: центральная SoI + внешние сущности):
 
-    IdP["IdP / SSO"] -->|"OIDC/SAML claims and MFA state"| SoIHub
-    SoIHub -->|"Session and AuthZ validation"| IdP
+![Контекстная диаграмма API Access Management](docs/context_diagram_api_access_management.png)
 
-    GW["API Gateway"] -->|"Introspection and access checks"| SoIHub
-    SoIHub -->|"Policies, revoke, metadata"| GW
+Код диаграммы (Graphviz DOT):
 
-    Vault["Secrets Vault"] -->|"Secret metadata and status"| SoIHub
-    SoIHub -->|"Store, rotate, revoke secret"| Vault
+```dot
+digraph Context {
+  graph [layout=neato, overlap=false, splines=true, pad=0.3, fontsize=18, fontname="Arial"];
+  node [shape=box, style="rounded,filled", fillcolor="#dfefff", color="#2b4c66", penwidth=1.5, fontname="Arial", fontsize=14];
+  edge [color="#1f1f1f", penwidth=1.2, arrowsize=0.8, fontname="Arial", fontsize=11];
 
-    SIEM["SIEM / Log Platform"] -->|"Incident tags and lookup"| SoIHub
-    SoIHub -->|"Security events, alerts, audit stream"| SIEM
+  soi [label="Сервис управления\nдоступом к API", shape=ellipse, fillcolor="#cfe6ff", width=3.6, height=1.8, pos="0,0!"];
+  dev [label="Разработчик", pos="-7,2.3!"];
+  devops [label="DevOps", pos="-7,-0.5!"];
+  cicd [label="CI/CD", pos="-6.6,-3.2!"];
+  sso [label="IdP / SSO", pos="-1.4,4.2!"];
+  mail [label="Почтовый\nсервис", pos="-4.7,4.0!"];
+  bi [label="BI / Аналитика", pos="3.2,4.2!"];
+  partner [label="Партнер-\nинтегратор", pos="6.7,4.1!"];
+  sec [label="ИБ-аналитик", pos="6.2,2.5!"];
+  auditor [label="Аудитор", pos="7.0,0.0!"];
+  admin [label="Администратор\nплатформы", pos="6.1,-2.8!"];
+  gw [label="API Gateway", pos="1.2,-4.2!"];
+  vault [label="Secrets Vault", pos="-2.2,-4.3!"];
+  siem [label="SIEM /\nЛогирование", pos="4.0,-4.1!"];
 
-    Mail["Mail / Notify"] -->|"Delivery status and failures"| SoIHub
-    SoIHub -->|"Notifications: approvals, rotations, incidents"| Mail
-
-    BI["BI / Analytics (optional)"] -->|"KPI queries"| SoIHub
-    SoIHub -->|"Aggregated access, rotation, SLA data"| BI
-
-    subgraph SoI["System of Interest: API Access Management"]
-        SoIHub["Access Management Platform (SoI Hub)"]
-        Portal["Access Portal"]
-        Core["Access Control Core API"]
-        Policy["Policy Engine"]
-        Issuer["Credential Issuer"]
-        Rot["Rotation Orchestrator"]
-        Audit["Audit Journal"]
-        Admin["Admin Console"]
-        Report["Reporting"]
-        DB["Service DB"]
-        SoIHub --- Portal
-        SoIHub --- Core
-        SoIHub --- Policy
-        SoIHub --- Issuer
-        SoIHub --- Rot
-        SoIHub --- Audit
-        SoIHub --- Admin
-        SoIHub --- Report
-        SoIHub --- DB
-    end
+  dev -> soi [label="Заявка на доступ"]; soi -> dev [label="Статус заявки"];
+  devops -> soi [label="Запросы на ротацию"]; soi -> devops [label="Статусы операций"];
+  cicd -> soi [label="M2M-запросы"]; soi -> cicd [label="Сервисные учетные данные"];
+  sso -> soi [label="Утверждения и MFA"]; soi -> sso [label="Проверка сессии"];
+  mail -> soi [label="Статус доставки"]; soi -> mail [label="Уведомления"];
+  bi -> soi [label="KPI-запросы"]; soi -> bi [label="Агрегированные отчеты"];
+  partner -> soi [label="Партнерская заявка"]; soi -> partner [label="Ограниченные токены"];
+  sec -> soi [label="Согласование/отклонение"]; soi -> sec [label="Алерты и журналы"];
+  auditor -> soi [label="Запрос аудита"]; soi -> auditor [label="Доказательная отчетность"];
+  admin -> soi [label="Настройки и исключения"]; soi -> admin [label="Ошибки и конфиг"];
+  gw -> soi [label="Проверка токена/доступа"]; soi -> gw [label="Политики и отзыв"];
+  vault -> soi [label="Статусы секретов"]; soi -> vault [label="Хранение/ротация/отзыв"];
+  siem -> soi [label="Теги инцидентов"]; soi -> siem [label="События безопасности"];
+}
 ```
 
 Ниже приведена текстовая декомпозиция той же диаграммы в формате `External Entity ↔ Flow`.
@@ -81,7 +76,8 @@ flowchart LR
 | SIEM / Log Platform | Correlation lookup, incident tags | Audit events, security alerts, policy-change events |
 | Mail/Notify | Delivery status, bounce/failure events | Уведомления о заявках, approvals, ротации, инцидентах |
 | BI/Analytics (опц.) | Запросы срезов и KPI | Агрегированные отчеты по доступам, ротациям, SLA |
-| CI/CD системы | Machine-to-machine access requests | Service credentials, scoped tokens, operation results |
+| Партнёрские интеграционные системы | Контекст федеративной аутентификации, партнёрские запросы доступа | Ограниченные учётные данные, политики партнёра, уведомления об отзыве |
+| CI/CD системы | Межсервисные запросы от конвейера поставки | Сервисные учётные данные, scoped-токены, результаты операций |
 
 ### 1.4 Границы SoI
 
@@ -104,6 +100,7 @@ flowchart LR
 4. `SIEM`.
 5. `Mail/Notify`.
 6. `BI/Analytics`.
+7. `Партнёрские системы интеграции`.
 
 ## 2. CONOPS / OPSCON
 
@@ -134,6 +131,11 @@ flowchart LR
    2. Действия: запрашивает отчеты, проверяет трассируемость заявка→approval→выдача→использование→отзыв.
    3. Ограничения: read-only доступ, без operational mutations.
    4. Критичные ожидания: экспортируемые доказательства, целостность журналов, понятные KPI/SLA.
+6. `Партнер-интегратор`
+   1. Цель: безопасно интегрировать внешние сервисы с API-платформой.
+   2. Действия: подает заявки на доступ, использует ограниченные партнерские учетные данные, проходит ревалидации доступа.
+   3. Ограничения: доступ только в пределах выделенного tenant и утвержденных API-продуктов.
+   4. Критичные ожидания: стабильные контракты API, прозрачный процесс одобрения и своевременный отзыв.
 
 ### 2.2 Системные элементы (типовая конфигурация)
 
@@ -145,25 +147,25 @@ flowchart LR
 6. `Audit Journal` + event bus.
 7. `Admin Console`.
 8. `Service DB`.
-9. Внешние интеграции: IdP/SSO, API Gateway, Vault, SIEM, Mail.
+9. Внешние интеграции: IdP/SSO (в т.ч. federation), API Gateway, Vault, SIEM, Mail, партнёрские интеграционные системы.
 
 ### 2.3 Сценарий S1. Регистрация приложения и запрос API-доступа
 
 #### Цель
 
-Команда регистрирует приложение и создает первичный запрос на доступ к API-продукту.
+Внутренняя команда или партнёр регистрирует приложение и создаёт первичный запрос на доступ к API-продукту.
 
 #### Условия начала
 
 1. Пользователь аутентифицирован через SSO.
-2. Команда и окружение (`dev/test/prod`) заведены.
+2. Tenant, команда (или партнёрский контур) и окружение (`dev/test/prod`) заведены.
 3. API-продукт опубликован в каталоге.
 
 #### Основной поток (Happy path)
 
 1. Разработчик создает application profile.
 2. Выбирает API-продукт, окружение и шаблон доступа.
-3. Система валидирует team scope и обязательные поля.
+3. Система валидирует `tenant_id`, `team_id`/`partner_id` и обязательные поля.
 4. Запрос получает `request_id` и статус `Submitted`.
 5. Если риск низкий, применяется auto-approval policy, иначе заявка уходит на security approval.
 6. Пользователь видит итоговый статус и SLA по обработке.
@@ -343,17 +345,17 @@ flowchart LR
 
 Формат: `SR-SH-x` - требования заинтересованных сторон.
 
-1. `SR-SH-1` Разработчик должен иметь возможность подать self-service заявку на API-доступ и получить финальный статус без участия платформенной команды в стандартных случаях.
+1. `SR-SH-1` Разработчик или партнёр-интегратор должен иметь возможность подать self-service заявку на API-доступ и получить финальный статус без участия платформенной команды в стандартных low-risk случаях.
 2. `SR-SH-2` DevOps должен получать и использовать service credentials через API для автоматизации в CI/CD без ручного копирования секретов.
 3. `SR-SH-3` ИБ должна иметь управляемый approval flow для изменений с medium/high risk.
-4. `SR-SH-4` Платформенный администратор должен управлять шаблонами политик централизованно для всех команд.
+4. `SR-SH-4` Платформенный администратор должен управлять шаблонами политик централизованно для всех tenant-контуров (внутренних и партнёрских).
 5. `SR-SH-5` Аудитор должен иметь доступ к неизменяемому журналу действий с поиском по `actor_id`, `credential_id`, `correlation_id`.
 6. `SR-SH-6` Система должна поддерживать отзыв скомпрометированного credential в согласованный SLA.
 7. `SR-SH-7` Команда-владелец приложения должна видеть полный жизненный цикл доступа: заявка, approval, выдача, ротация, отзыв.
 8. `SR-SH-8` ИБ должна получать обнаружение и оповещение по аномальным отказам доступа и попыткам эскалации.
 9. `SR-SH-9` Бизнес должен получать стабильную работу self-service портала без снижения контрольных процедур.
 10. `SR-SH-10` Все критичные admin/security операции должны иметь двухэтапное подтверждение или эквивалентный компенсирующий контроль.
-11. `SR-SH-11` Система должна поддерживать доказуемую комплаенс-отчетность по доступам за заданный период.
+11. `SR-SH-11` Система должна поддерживать доказуемую комплаенс-отчетность по доступам за заданный период (SOC 2/ISO 27001 и внутренние аудиторские политики).
 12. `SR-SH-12` Пользователь должен получать прозрачные причины отказа и действия для исправления заявки.
 
 ### 3.2 System requirements (32 шт., атомарные и проверяемые)
@@ -362,7 +364,7 @@ flowchart LR
 
 #### AuthN/AuthZ
 
-1. `SR-SYS-1` Система должна принимать аутентификацию только через корпоративный IdP/SSO по OIDC или SAML.  
+1. `SR-SYS-1` Система должна принимать аутентификацию через корпоративный или федеративный IdP/SSO по OIDC или SAML с валидацией issuer allowlist.  
 Верификация: I + T (проверка конфигурации и login test).
 2. `SR-SYS-2` Для ролей `ИБ-аналитик` и `Администратор платформы` система должна требовать MFA при каждой новой сессии.  
 Верификация: T.
@@ -370,9 +372,9 @@ flowchart LR
 Верификация: T + A.
 4. `SR-SYS-4` Любой запрос на мутацию должен отклоняться с `403`, если роль не содержит необходимого permission scope.  
 Верификация: T.
-5. `SR-SYS-5` Система должна поддерживать принцип least privilege через scope-права на уровне `team_id` и `api_product_id`.  
+5. `SR-SYS-5` Система должна поддерживать принцип least privilege через scope-права на уровне `tenant_id`, `team_id`/`partner_id` и `api_product_id`.  
 Верификация: I + T.
-6. `SR-SYS-6` Все access tokens для UI/API должны иметь `aud`, `iss`, `exp`, `sub` и проверяться на каждом запросе.  
+6. `SR-SYS-6` Все access tokens для UI/API должны иметь `aud`, `iss`, `exp`, `sub`, `tenant_id` и проверяться на каждом запросе.  
 Верификация: T.
 
 #### Credential lifecycle
@@ -409,7 +411,7 @@ flowchart LR
 
 #### Audit/forensics
 
-20. `SR-SYS-20` Каждый security-significant action должен порождать audit event с `event_id`, `occurred_at`, `actor_id`, `correlation_id`.  
+20. `SR-SYS-20` Каждый security-significant action должен порождать audit event с `event_id`, `occurred_at`, `actor_id`, `tenant_id`, `correlation_id`.  
 Верификация: I + T.
 21. `SR-SYS-21` Audit Journal должен быть неизменяемым для обычных пользователей и администраторов платформы.  
 Верификация: I + T.
@@ -431,7 +433,7 @@ flowchart LR
 
 #### Admin governance
 
-28. `SR-SYS-28` Админ-консоль должна поддерживать шаблоны политик с привязкой к классам API-продуктов и уровню риска.  
+28. `SR-SYS-28` Админ-консоль должна поддерживать шаблоны политик с привязкой к tenant-контексту, классам API-продуктов и уровню риска.  
 Верификация: T + I.
 29. `SR-SYS-29` Критичные admin-операции (`revoke all`, `policy override`) должны требовать step-up подтверждение или dual control.  
 Верификация: T + D.
@@ -449,11 +451,11 @@ flowchart LR
 
 Формат: `NFR-x` - нефункциональные требования.
 
-1. `NFR-1 Security/MFA` 100% сессий ролей `ИБ-аналитик` и `Администратор` должны проходить MFA challenge.  
+1. `NFR-1 Security/MFA` 100% сессий привилегированных ролей (`ИБ-аналитик`, `Администратор`, `партнёрский админ`) должны проходить MFA challenge.  
 Метрика: доля MFA-validated privileged sessions = 1.0 за месяц.  
 Верификация: A + I.
-2. `NFR-2 Security/Least Privilege` Не менее 99.9% мутаций должны выполняться в пределах team scope без cross-team violations.  
-Метрика: violation rate <= 0.1%.  
+2. `NFR-2 Security/Least Privilege` Не менее 99.95% мутаций должны выполняться в пределах tenant/team scope без cross-tenant violations.  
+Метрика: cross-tenant violation rate <= 0.05%.  
 Верификация: A.
 3. `NFR-3 Security/Signing` Все выдаваемые токены должны быть подписаны ключом из утвержденного keyset; rotation signing keys не реже 90 дней.  
 Метрика: key age <= 90 days.  
@@ -467,10 +469,10 @@ flowchart LR
 6. `NFR-6 Security/Revocation SLA` Отзыв credential должен достигать Gateway в `p99 <= 60 сек`.  
 Метрика: revoke propagation latency p99 <= 60s.  
 Верификация: T + A.
-7. `NFR-7 Reliability/Availability` Доступность core API операций (`request`, `issue`, `revoke`, `policy change`) не ниже 99.9% в календарный месяц.  
-Метрика: monthly availability >= 99.9%.  
+7. `NFR-7 Reliability/Availability` Доступность core API операций (`request`, `issue`, `revoke`, `policy change`) не ниже 99.95% в календарный месяц.  
+Метрика: monthly availability >= 99.95%.  
 Верификация: A.
-8. `NFR-8 Reliability/RTO-RPO` Для Service DB: `RTO <= 30 мин`, `RPO <= 5 мин`.  
+8. `NFR-8 Reliability/RTO-RPO` Для Service DB: `RTO <= 15 мин`, `RPO <= 1 мин`.  
 Метрика: результаты DR-упражнений и backup restore tests.  
 Верификация: D + T.
 9. `NFR-9 Reliability/Retry` Для интеграций Gateway/Vault/SIEM минимум 3 ретрая с exponential backoff и idempotent dedupe.  
@@ -481,22 +483,22 @@ flowchart LR
 11. `NFR-11 Operability/MTTR` Среднее время восстановления критичного инцидента (P1) не более 30 минут.  
 Метрика: MTTR P1 <= 30m за квартал.  
 Верификация: A.
-12. `NFR-12 Operability/Log Completeness` Не менее 99.5% security-significant операций должны иметь полный audit trail с correlation-id.  
-Метрика: audit completeness >= 99.5%.  
+12. `NFR-12 Operability/Log Completeness` Не менее 99.9% security-significant операций должны иметь полный audit trail с `tenant_id` и `correlation_id`.  
+Метрика: audit completeness >= 99.9%.  
 Верификация: A + I.
 
 ### 3.4 Методика SLA/SLO
 
-1. Период измерения: календарный месяц (UTC).
+1. Период измерения: календарный месяц (UTC) с отдельной агрегацией по каждому `tenant_id`.
 2. SLI источники:
-   1. API availability и latency: APM/ingress metrics.
+   1. API availability и latency: APM/ingress metrics с tenant-тегами.
    2. Revocation propagation: Gateway telemetry.
    3. Audit completeness: Audit DB + SIEM ingestion counters.
 3. Исключения из SLA:
-   1. Плановые окна обслуживания до 2 часов/месяц.
+   1. Плановые окна обслуживания до 2 часов/месяц (с предварительным уведомлением tenant-владельцев).
    2. Форс-мажор вне ответственности платформы.
 4. Error budget:
-   1. Для SLO 99.9% допустимый простой = 43.2 минуты/месяц.
+   1. Для SLO 99.95% допустимый простой = 21.6 минуты/месяц.
    2. Превышение error budget блокирует risky releases до corrective actions.
 5. Отчетность:
    1. Ежедневный operational SLO dashboard.
@@ -933,7 +935,7 @@ Idempotency: по `event_id`.
 ## 10. Принятые допущения и дефолты
 
 1. Язык документа: русский, формат Markdown.
-2. Контур: внутренняя платформа одной организации (single enterprise tenant model).
-3. Интеграции IdP/SSO, API Gateway, Vault, SIEM, Mail обязательны.
+2. Контур: enterprise multi-tenant платформа (внутренние команды + внешние партнёры) с обязательной tenant-изоляцией.
+3. Интеграции IdP/SSO (включая federation), API Gateway, Vault, SIEM, Mail обязательны.
 4. BI/Analytics используется опционально для отчетности и трендов.
 5. Криптография, неизменяемый аудит и контроль изменений обязательны для enterprise-профиля.

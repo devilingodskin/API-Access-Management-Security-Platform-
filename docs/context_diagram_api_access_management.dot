@@ -1,0 +1,93 @@
+digraph Context {
+  graph [
+    layout=neato,
+    overlap=false,
+    splines=true,
+    pad=0.3,
+    nodesep=0.6,
+    ranksep=0.8,
+    fontsize=18,
+    fontname="Arial",
+    bgcolor="white"
+  ];
+
+  node [
+    shape=box,
+    style="rounded,filled",
+    fillcolor="#dfefff",
+    color="#2b4c66",
+    penwidth=1.5,
+    fontname="Arial",
+    fontsize=14
+  ];
+
+  edge [
+    color="#1f1f1f",
+    penwidth=1.2,
+    arrowsize=0.8,
+    fontname="Arial",
+    fontsize=11
+  ];
+
+  soi [
+    label="Сервис управления\nдоступом к API",
+    shape=ellipse,
+    fillcolor="#cfe6ff",
+    width=3.6,
+    height=1.8,
+    pos="0,0!"
+  ];
+
+  dev     [label="Разработчик",                  pos="-7,2.3!"];
+  devops  [label="DevOps",                       pos="-7,-0.5!"];
+  cicd    [label="CI/CD",                        pos="-6.6,-3.2!"];
+  sso     [label="IdP / SSO",                    pos="-1.4,4.2!"];
+  mail    [label="Почтовый\nсервис",             pos="-4.7,4.0!"];
+  bi      [label="BI / Аналитика",               pos="3.2,4.2!"];
+  partner [label="Партнер-\nинтегратор",         pos="6.7,4.1!"];
+  sec     [label="ИБ-аналитик",                  pos="6.2,2.5!"];
+  auditor [label="Аудитор",                      pos="7.0,0.0!"];
+  admin   [label="Администратор\nплатформы",     pos="6.1,-2.8!"];
+  gw      [label="API Gateway",                  pos="1.2,-4.2!"];
+  vault   [label="Secrets Vault",                pos="-2.2,-4.3!"];
+  siem    [label="SIEM /\nЛогирование",          pos="4.0,-4.1!"];
+
+  dev  -> soi [label="Заявка на доступ"];
+  soi  -> dev [label="Статус заявки"];
+
+  devops -> soi [label="Запросы на ротацию"];
+  soi    -> devops [label="Статусы операций"];
+
+  cicd -> soi [label="M2M-запросы"];
+  soi  -> cicd [label="Сервисные учетные данные"];
+
+  sso -> soi [label="Утверждения и MFA"];
+  soi -> sso [label="Проверка сессии"];
+
+  mail -> soi [label="Статус доставки"];
+  soi  -> mail [label="Уведомления"];
+
+  bi  -> soi [label="Запросы KPI"];
+  soi -> bi  [label="Агрегированные отчеты"];
+
+  partner -> soi [label="Партнерская заявка"];
+  soi     -> partner [label="Ограниченные токены"];
+
+  sec -> soi [label="Согласование/отклонение"];
+  soi -> sec [label="Алерты и журналы"];
+
+  auditor -> soi [label="Запрос аудита"];
+  soi     -> auditor [label="Evidence-отчеты"];
+
+  admin -> soi [label="Настройки и override"];
+  soi   -> admin [label="Ошибки и конфиг"];
+
+  gw  -> soi [label="Проверка токена/доступа"];
+  soi -> gw  [label="Политики и revoke"];
+
+  vault -> soi [label="Статусы секретов"];
+  soi   -> vault [label="Хранение/ротация/отзыв"];
+
+  siem -> soi [label="Теги инцидентов"];
+  soi  -> siem [label="События безопасности"];
+}
