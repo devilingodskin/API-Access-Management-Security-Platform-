@@ -21,7 +21,57 @@
    2. Централизованные политики и approval flow для критичных изменений.
    3. Интеграции с внешними компонентами обязательны: SSO, Gateway, Vault, SIEM, Mail.
 
-### 1.3 Текстовая контекстная диаграмма (External Entity ↔ Flow)
+### 1.3 Контекстная диаграмма (L0: SoI ↔ внешние сущности)
+
+```mermaid
+flowchart LR
+    Dev["Разработчик / DevOps"] -->|Self-service запросы, API-вызовы| SoIHub
+    Sec["ИБ-аналитик / Аудитор"] -->|Approval, расследования, отчеты| SoIHub
+    SoIHub -->|Статусы заявок, выдача credential, отчеты| Dev
+    SoIHub -->|Audit trails, incident evidence| Sec
+
+    IdP["IdP / SSO"] -->|OIDC/SAML claims, MFA state| SoIHub
+    SoIHub -->|Session/AuthZ validation| IdP
+
+    GW["API Gateway"] -->|Introspection, access checks| SoIHub
+    SoIHub -->|Политики, revoke, metadata| GW
+
+    Vault["Secrets Vault"] -->|Secret version metadata, status| SoIHub
+    SoIHub -->|Store/rotate/revoke secret| Vault
+
+    SIEM["SIEM / Log Platform"] -->|Incident tags, lookup| SoIHub
+    SoIHub -->|Security events, alerts, audit stream| SIEM
+
+    Mail["Mail / Notify"] -->|Delivery status, failures| SoIHub
+    SoIHub -->|Notifications (approval/rotation/incidents)| Mail
+
+    BI["BI / Analytics (optional)"] -->|KPI queries| SoIHub
+    SoIHub -->|Aggregated access/rotation/SLA datasets| BI
+
+    subgraph SoI["System of Interest: API Access Management"]
+        SoIHub["Access Management Platform (SoI Hub)"]
+        Portal["Access Portal"]
+        Core["Access Control Core API"]
+        Policy["Policy Engine"]
+        Issuer["Credential Issuer"]
+        Rot["Rotation Orchestrator"]
+        Audit["Audit Journal"]
+        Admin["Admin Console"]
+        Report["Reporting"]
+        DB["Service DB"]
+        SoIHub --- Portal
+        SoIHub --- Core
+        SoIHub --- Policy
+        SoIHub --- Issuer
+        SoIHub --- Rot
+        SoIHub --- Audit
+        SoIHub --- Admin
+        SoIHub --- Report
+        SoIHub --- DB
+    end
+```
+
+Ниже приведена текстовая декомпозиция той же диаграммы в формате `External Entity ↔ Flow`.
 
 | Внешняя сущность | Поток в систему | Поток из системы |
 | --- | --- | --- |
