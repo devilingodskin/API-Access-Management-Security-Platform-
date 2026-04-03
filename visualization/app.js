@@ -618,7 +618,7 @@ function setup3DTilts() {
 }
 
 function setupBoomFx() {
-  if (!fxCanvas || window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+  if (!fxCanvas) {
     return;
   }
 
@@ -628,13 +628,13 @@ function setupBoomFx() {
   }
 
   const particles = [];
-  const maxParticles = 320;
+  const maxParticles = 560;
   let width = 0;
   let height = 0;
   let dpr = 1;
   let lastScrollY = window.scrollY;
   let scrollCooldown = 0;
-  const palette = ["#8cb4f8", "#5f8ccf", "#d4e7ff", "#6e9cf0", "#ffb58a"];
+  const palette = ["#8cb4f8", "#5f8ccf", "#d4e7ff", "#6e9cf0", "#ffb58a", "#8af2ff", "#ffffff"];
 
   const resize = () => {
     dpr = Math.max(1, Math.min(window.devicePixelRatio || 1, 2));
@@ -648,15 +648,16 @@ function setupBoomFx() {
   const emit = (x, y, count, power = 1) => {
     for (let i = 0; i < count; i += 1) {
       const angle = Math.random() * Math.PI * 2;
-      const speed = (1.2 + Math.random() * 4.8) * power;
+      const speed = (1.8 + Math.random() * 6.4) * power;
+      const life = 34 + Math.random() * 52;
       particles.push({
         x,
         y,
         vx: Math.cos(angle) * speed,
         vy: Math.sin(angle) * speed,
-        radius: 0.9 + Math.random() * 2.4,
-        life: 24 + Math.random() * 38,
-        maxLife: 24 + Math.random() * 38,
+        radius: 1.2 + Math.random() * 3.2,
+        life,
+        maxLife: life,
         color: palette[(Math.random() * palette.length) | 0],
       });
     }
@@ -689,15 +690,15 @@ function setupBoomFx() {
 
       particle.x += particle.vx;
       particle.y += particle.vy;
-      particle.vx *= 0.985;
-      particle.vy *= 0.985;
-      particle.vy += 0.012;
+      particle.vx *= 0.983;
+      particle.vy *= 0.983;
+      particle.vy += 0.016;
 
       const alpha = particle.life / particle.maxLife;
       context.globalAlpha = alpha;
       context.fillStyle = particle.color;
       context.beginPath();
-      context.arc(particle.x, particle.y, particle.radius + (1 - alpha) * 1.8, 0, Math.PI * 2);
+      context.arc(particle.x, particle.y, particle.radius + (1 - alpha) * 2.4, 0, Math.PI * 2);
       context.fill();
     }
 
@@ -705,18 +706,8 @@ function setupBoomFx() {
     requestAnimationFrame(draw);
   };
 
-  document.addEventListener("click", (event) => {
-    const target = event.target;
-    if (!(target instanceof Element)) {
-      return;
-    }
-
-    const trigger = target.closest(".scenario-pill, .metric, .toc-link, #to-top, .topbar-link");
-    if (!trigger) {
-      return;
-    }
-
-    emit(event.clientX, event.clientY, 30, 1.25);
+  document.addEventListener("pointerdown", (event) => {
+    emit(event.clientX, event.clientY, 58, 1.55);
     shockwave(event.clientX, event.clientY);
   });
 
@@ -729,24 +720,35 @@ function setupBoomFx() {
         scrollCooldown -= 1;
         return;
       }
-      if (delta > 120) {
+      if (delta > 90) {
         const x = width * (0.25 + Math.random() * 0.5);
         const y = height * (0.1 + Math.random() * 0.3);
-        emit(x, y, 14, 0.9);
+        emit(x, y, 24, 1.05);
         scrollCooldown = 2;
       }
     },
     { passive: true },
   );
 
-  scenarioRail.addEventListener("pointerover", (event) => {
-    const target = event.target;
-    if (!(target instanceof Element) || !target.classList.contains("scenario-pill")) {
-      return;
-    }
-    const rect = target.getBoundingClientRect();
-    emit(rect.left + rect.width / 2, rect.top + rect.height / 2, 10, 0.7);
-  });
+  if (scenarioRail) {
+    scenarioRail.addEventListener("pointerover", (event) => {
+      const target = event.target;
+      if (!(target instanceof Element) || !target.classList.contains("scenario-pill")) {
+        return;
+      }
+      const rect = target.getBoundingClientRect();
+      emit(rect.left + rect.width / 2, rect.top + rect.height / 2, 16, 0.95);
+    });
+  }
+
+  setTimeout(() => {
+    emit(width * 0.62, Math.min(260, height * 0.32), 120, 1.7);
+    shockwave(width * 0.62, Math.min(260, height * 0.32));
+  }, 260);
+
+  window.setInterval(() => {
+    emit(width * (0.2 + Math.random() * 0.6), height * (0.12 + Math.random() * 0.25), 18, 0.88);
+  }, 1800);
 
   window.addEventListener("resize", resize);
   resize();
