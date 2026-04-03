@@ -1,67 +1,18 @@
-const counters = [...document.querySelectorAll(".stat-value")];
-const panicFill = document.getElementById("panic-fill");
-const panicValue = document.getElementById("panic-value");
 const statusLine = document.getElementById("status-line");
 const authorCards = [...document.querySelectorAll(".author-card")];
 const yearNode = document.getElementById("year");
-const canvas = document.getElementById("chaos-canvas");
 
 if (yearNode) {
   yearNode.textContent = new Date().getFullYear().toString();
 }
 
-function animateCount(node, target) {
-  const start = performance.now();
-  const duration = 1300 + Math.min(target * 3, 500);
-
-  const frame = (now) => {
-    const t = Math.min((now - start) / duration, 1);
-    const eased = 1 - (1 - t) ** 4;
-    node.textContent = Math.round(target * eased).toString();
-    if (t < 1) {
-      requestAnimationFrame(frame);
-    }
-  };
-
-  requestAnimationFrame(frame);
-}
-
-function setupCounterReveal() {
-  const observer = new IntersectionObserver(
-    (entries, io) => {
-      entries.forEach((entry) => {
-        if (!entry.isIntersecting) {
-          return;
-        }
-
-        const target = Number(entry.target.getAttribute("data-target") || "0");
-        animateCount(entry.target, target);
-        io.unobserve(entry.target);
-      });
-    },
-    { threshold: 0.35 },
-  );
-
-  counters.forEach((counter) => observer.observe(counter));
-}
-
-function setupPanicMeter() {
-  let value = 27;
-
-  const tick = () => {
-    value += Math.floor((Math.random() - 0.35) * 8);
-    value = Math.max(71, Math.min(99, value));
-
-    panicFill.style.width = `${value}%`;
-    panicValue.textContent = String(value);
-  };
-
-  tick();
-  setInterval(tick, 620);
-}
-
 function typeLine(text, speed = 22) {
   return new Promise((resolve) => {
+    if (!statusLine) {
+      resolve();
+      return;
+    }
+
     let i = 0;
     const step = () => {
       statusLine.textContent = text.slice(0, i);
@@ -86,50 +37,55 @@ async function runStatusLoop() {
   }
 
   const lines = [
-    "> compiling courage... ok",
-    "> syncing markdown with reality... warning: deadlines detected",
-    "> rendering animations... status: still alive",
-    "> final review... actually one more final review",
-    "> deploy complete. coffee level: critical",
+    "> уважение авторам: initialized",
+    "> благодарность за каждый фикс: active",
+    "> стабильность проекта: maintained",
+    "> человеческий ресурс: держится на уважении",
   ];
 
   while (true) {
     for (const line of lines) {
       await typeLine(line);
-      await wait(900);
+      await wait(950);
     }
   }
 }
 
-function burst(x, y) {
+function emitLike(x, y, text = "👍") {
   const node = document.createElement("span");
-  node.className = "burst";
+  node.className = "respect-like";
+  node.textContent = text;
   node.style.left = `${x}px`;
   node.style.top = `${y}px`;
+  node.style.setProperty("--dx", `${Math.round((Math.random() - 0.5) * 120)}px`);
+  node.style.setProperty("--dy", `${-(100 + Math.round(Math.random() * 90))}px`);
+  node.style.setProperty("--rot", `${Math.round((Math.random() - 0.5) * 40)}deg`);
+  node.style.setProperty("--scale", (1 + Math.random() * 0.45).toFixed(2));
+  node.style.setProperty("--dur", `${840 + Math.round(Math.random() * 420)}ms`);
   document.body.appendChild(node);
-  setTimeout(() => node.remove(), 520);
+  setTimeout(() => node.remove(), 1400);
 }
 
-function setupAuthorCardBursts() {
+function launchRespectWave(card, event) {
+  const rect = card.getBoundingClientRect();
+  const baseX = event.clientX || rect.left + rect.width / 2;
+  const baseY = event.clientY || rect.top + rect.height / 2;
+  const likes = ["👍", "👍", "👍", "👍", "👍", "👍", "👍"];
+
+  likes.forEach((icon, index) => {
+    setTimeout(() => {
+      emitLike(baseX + (Math.random() - 0.5) * 34, baseY + (Math.random() - 0.5) * 18, icon);
+    }, index * 55);
+  });
+}
+
+function setupAuthorCardRespect() {
   authorCards.forEach((card) => {
     card.addEventListener("click", (event) => {
-      const rect = card.getBoundingClientRect();
-      const centerX = rect.left + rect.width / 2;
-      const centerY = rect.top + rect.height / 2;
-
-      burst(event.clientX, event.clientY);
-      burst(centerX + 18, centerY - 12);
-      burst(centerX - 16, centerY + 10);
+      launchRespectWave(card, event);
     });
   });
 }
 
-function setupCanvasDust() {
-  return;
-}
-
-setupCounterReveal();
-setupPanicMeter();
 runStatusLoop();
-setupAuthorCardBursts();
-setupCanvasDust();
+setupAuthorCardRespect();
