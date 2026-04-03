@@ -707,38 +707,17 @@ function setupBoomFx() {
     requestAnimationFrame(draw);
   };
 
-  const domBlast = (x, y, intensity = 1) => {
+  const domBlast = (x, y) => {
     const flash = document.createElement("span");
     flash.className = "boom-flash";
     flash.style.left = `${x}px`;
     flash.style.top = `${y}px`;
     document.body.appendChild(flash);
     setTimeout(() => flash.remove(), 520);
-
-    const fragments = Math.round(8 + intensity * 8);
-    for (let i = 0; i < fragments; i += 1) {
-      const frag = document.createElement("span");
-      const angle = Math.random() * Math.PI * 2;
-      const distance = 36 + Math.random() * (90 * intensity);
-      frag.className = "boom-frag";
-      frag.style.left = `${x}px`;
-      frag.style.top = `${y}px`;
-      frag.style.setProperty("--boom-x", `${Math.cos(angle) * distance}px`);
-      frag.style.setProperty("--boom-y", `${Math.sin(angle) * distance}px`);
-      frag.style.setProperty("--boom-rot", `${Math.random() * 180}deg`);
-      document.body.appendChild(frag);
-      setTimeout(() => frag.remove(), 700);
-    }
-
-    document.body.classList.remove("screen-shake");
-    requestAnimationFrame(() => {
-      document.body.classList.add("screen-shake");
-      setTimeout(() => document.body.classList.remove("screen-shake"), 220);
-    });
   };
 
   document.addEventListener("pointerdown", (event) => {
-    domBlast(event.clientX, event.clientY, 1.2);
+    domBlast(event.clientX, event.clientY);
     emit(event.clientX, event.clientY, 68, 1.75);
     shockwave(event.clientX, event.clientY);
   });
@@ -771,7 +750,7 @@ function setupBoomFx() {
       const rect = target.getBoundingClientRect();
       const cx = rect.left + rect.width / 2;
       const cy = rect.top + rect.height / 2;
-      domBlast(cx, cy, 0.6);
+      domBlast(cx, cy);
       emit(cx, cy, 20, 1.05);
     });
   }
@@ -779,7 +758,7 @@ function setupBoomFx() {
   setTimeout(() => {
     const x = width * 0.62;
     const y = Math.min(260, height * 0.32);
-    domBlast(x, y, 1.4);
+    domBlast(x, y);
     emit(x, y, 140, 1.95);
     shockwave(x, y);
   }, 260);
