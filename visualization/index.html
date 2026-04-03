@@ -17,6 +17,7 @@
     <link rel="stylesheet" href="./styles.css" />
   </head>
   <body>
+    <canvas id="fx-canvas" aria-hidden="true"></canvas>
     <div class="ambient ambient-a" aria-hidden="true"></div>
     <div class="ambient ambient-b" aria-hidden="true"></div>
     <div class="grain" aria-hidden="true"></div>
@@ -40,6 +41,12 @@
         <p class="hero-copy">
           Структурированное представление markdown-документа с навигацией по разделам, сценариям и требованиям.
         </p>
+        <div class="hero-3d" aria-hidden="true">
+          <div class="hero-plate hero-plate-a"></div>
+          <div class="hero-plate hero-plate-b"></div>
+          <div class="hero-ring"></div>
+          <div class="hero-core"></div>
+        </div>
         <div id="metric-strip" class="metric-strip" aria-label="Метрики кейса"></div>
         <div id="scenario-rail" class="scenario-rail" aria-label="Сценарии"></div>
       </section>

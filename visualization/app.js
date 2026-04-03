@@ -4,6 +4,8 @@ const metricStrip = document.getElementById("metric-strip");
 const scenarioRail = document.getElementById("scenario-rail");
 const progressBar = document.getElementById("scroll-progress");
 const toTop = document.getElementById("to-top");
+const hero = document.querySelector(".hero");
+const fxCanvas = document.getElementById("fx-canvas");
 
 const slugCounts = new Map();
 
@@ -535,6 +537,222 @@ function setupScrollUI() {
   update();
 }
 
+function setupHeroParallax() {
+  if (!hero) {
+    return;
+  }
+
+  let targetX = 0;
+  let targetY = 0;
+  let currentX = 0;
+  let currentY = 0;
+  let rafId = null;
+
+  const animate = () => {
+    currentX += (targetX - currentX) * 0.12;
+    currentY += (targetY - currentY) * 0.12;
+    hero.style.setProperty("--pointer-x", String(currentX));
+    hero.style.setProperty("--pointer-y", String(currentY));
+
+    if (Math.abs(targetX - currentX) + Math.abs(targetY - currentY) > 0.002) {
+      rafId = requestAnimationFrame(animate);
+    } else {
+      rafId = null;
+    }
+  };
+
+  const schedule = () => {
+    if (rafId === null) {
+      rafId = requestAnimationFrame(animate);
+    }
+  };
+
+  const setTarget = (clientX, clientY) => {
+    const rect = hero.getBoundingClientRect();
+    const x = ((clientX - rect.left) / rect.width - 0.5) * 2;
+    const y = ((clientY - rect.top) / rect.height - 0.5) * 2;
+    targetX = Math.max(-1, Math.min(1, x));
+    targetY = Math.max(-1, Math.min(1, y));
+    schedule();
+  };
+
+  hero.addEventListener("mousemove", (event) => {
+    setTarget(event.clientX, event.clientY);
+  });
+
+  hero.addEventListener("touchmove", (event) => {
+    const touch = event.touches[0];
+    if (touch) {
+      setTarget(touch.clientX, touch.clientY);
+    }
+  });
+
+  hero.addEventListener("mouseleave", () => {
+    targetX = 0;
+    targetY = 0;
+    schedule();
+  });
+}
+
+function setup3DTilts() {
+  const targets = [...document.querySelectorAll(".metric, .scenario-pill")];
+  targets.forEach((item) => {
+    item.style.transformStyle = "preserve-3d";
+
+    const reset = () => {
+      item.style.transform = "";
+    };
+
+    item.addEventListener("mousemove", (event) => {
+      const rect = item.getBoundingClientRect();
+      const offsetX = (event.clientX - rect.left) / rect.width - 0.5;
+      const offsetY = (event.clientY - rect.top) / rect.height - 0.5;
+      const rotateY = offsetX * 10;
+      const rotateX = offsetY * -9;
+      item.style.transform = `translateZ(0) rotateX(${rotateX.toFixed(2)}deg) rotateY(${rotateY.toFixed(2)}deg)`;
+    });
+
+    item.addEventListener("mouseleave", reset);
+    item.addEventListener("blur", reset);
+  });
+}
+
+function setupBoomFx() {
+  if (!fxCanvas || window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+    return;
+  }
+
+  const context = fxCanvas.getContext("2d");
+  if (!context) {
+    return;
+  }
+
+  const particles = [];
+  const maxParticles = 320;
+  let width = 0;
+  let height = 0;
+  let dpr = 1;
+  let lastScrollY = window.scrollY;
+  let scrollCooldown = 0;
+  const palette = ["#8cb4f8", "#5f8ccf", "#d4e7ff", "#6e9cf0", "#ffb58a"];
+
+  const resize = () => {
+    dpr = Math.max(1, Math.min(window.devicePixelRatio || 1, 2));
+    width = window.innerWidth;
+    height = window.innerHeight;
+    fxCanvas.width = Math.floor(width * dpr);
+    fxCanvas.height = Math.floor(height * dpr);
+    context.setTransform(dpr, 0, 0, dpr, 0, 0);
+  };
+
+  const emit = (x, y, count, power = 1) => {
+    for (let i = 0; i < count; i += 1) {
+      const angle = Math.random() * Math.PI * 2;
+      const speed = (1.2 + Math.random() * 4.8) * power;
+      particles.push({
+        x,
+        y,
+        vx: Math.cos(angle) * speed,
+        vy: Math.sin(angle) * speed,
+        radius: 0.9 + Math.random() * 2.4,
+        life: 24 + Math.random() * 38,
+        maxLife: 24 + Math.random() * 38,
+        color: palette[(Math.random() * palette.length) | 0],
+      });
+    }
+
+    if (particles.length > maxParticles) {
+      particles.splice(0, particles.length - maxParticles);
+    }
+  };
+
+  const shockwave = (x, y) => {
+    const node = document.createElement("span");
+    node.className = "shockwave";
+    node.style.left = `${x}px`;
+    node.style.top = `${y}px`;
+    document.body.appendChild(node);
+    setTimeout(() => node.remove(), 560);
+  };
+
+  const draw = () => {
+    context.clearRect(0, 0, width, height);
+    context.globalCompositeOperation = "lighter";
+
+    for (let i = particles.length - 1; i >= 0; i -= 1) {
+      const particle = particles[i];
+      particle.life -= 1;
+      if (particle.life <= 0) {
+        particles.splice(i, 1);
+        continue;
+      }
+
+      particle.x += particle.vx;
+      particle.y += particle.vy;
+      particle.vx *= 0.985;
+      particle.vy *= 0.985;
+      particle.vy += 0.012;
+
+      const alpha = particle.life / particle.maxLife;
+      context.globalAlpha = alpha;
+      context.fillStyle = particle.color;
+      context.beginPath();
+      context.arc(particle.x, particle.y, particle.radius + (1 - alpha) * 1.8, 0, Math.PI * 2);
+      context.fill();
+    }
+
+    context.globalAlpha = 1;
+    requestAnimationFrame(draw);
+  };
+
+  document.addEventListener("click", (event) => {
+    const target = event.target;
+    if (!(target instanceof Element)) {
+      return;
+    }
+
+    const trigger = target.closest(".scenario-pill, .metric, .toc-link, #to-top, .topbar-link");
+    if (!trigger) {
+      return;
+    }
+
+    emit(event.clientX, event.clientY, 30, 1.25);
+    shockwave(event.clientX, event.clientY);
+  });
+
+  document.addEventListener(
+    "scroll",
+    () => {
+      const delta = Math.abs(window.scrollY - lastScrollY);
+      lastScrollY = window.scrollY;
+      if (scrollCooldown > 0) {
+        scrollCooldown -= 1;
+        return;
+      }
+      if (delta > 120) {
+        const x = width * (0.25 + Math.random() * 0.5);
+        const y = height * (0.1 + Math.random() * 0.3);
+        emit(x, y, 14, 0.9);
+        scrollCooldown = 2;
+      }
+    },
+    { passive: true },
+  );
+
+  scenarioRail.addEventListener("pointerover", (event) => {
+    const target = event.target;
+    if (!(target instanceof Element) || !target.classList.contains("scenario-pill")) {
+      return;
+    }
+    const rect = target.getBoundingClientRect();
+    emit(rect.left + rect.width / 2, rect.top + rect.height / 2, 10, 0.7);
+  });
+
+  window.addEventListener("resize", resize);
+  resize();
+  draw();
+}
+
 function renderError(message) {
   content.innerHTML = `<p>${escapeHtml(message)}</p>`;
 }
@@ -558,6 +776,9 @@ function bootstrap() {
     renderMetrics(stats);
     renderScenarioRail(stats.scenarioHeadings);
 
+    setupHeroParallax();
+    setup3DTilts();
+    setupBoomFx();
     setupRevealAnimations();
     setupActiveToc();
     setupScrollUI();

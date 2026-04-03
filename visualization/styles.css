@@ -33,10 +33,22 @@ body {
 body {
   position: relative;
   overflow-x: hidden;
+  perspective: 1200px;
 }
 
 a {
   color: inherit;
+}
+
+#fx-canvas {
+  position: fixed;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 6;
+  opacity: 0.9;
+  mix-blend-mode: screen;
 }
 
 .ambient {
@@ -183,6 +195,13 @@ main {
   align-content: center;
   gap: 24px;
   padding: clamp(56px, 9vw, 108px) 0 56px;
+  overflow: hidden;
+  transform-style: preserve-3d;
+}
+
+.hero > :not(.hero-3d) {
+  position: relative;
+  z-index: 2;
 }
 
 .hero::after {
@@ -228,6 +247,96 @@ main {
   animation: riseIn 0.7s ease 0.22s forwards;
 }
 
+.hero-3d {
+  position: absolute;
+  right: clamp(-70px, -8vw, -12px);
+  top: 48%;
+  width: clamp(260px, 36vw, 500px);
+  aspect-ratio: 1 / 1;
+  transform-style: preserve-3d;
+  transform: translate3d(calc(var(--pointer-x, 0) * 26px), calc(var(--pointer-y, 0) * 20px), -12px)
+    translateY(-50%) rotateX(calc(var(--pointer-y, 0) * -10deg)) rotateY(calc(var(--pointer-x, 0) * 10deg));
+  z-index: 1;
+  pointer-events: none;
+}
+
+.hero-plate {
+  position: absolute;
+  inset: 12%;
+  border-radius: 26px;
+  border: 1px solid rgba(68, 105, 167, 0.38);
+  background: linear-gradient(145deg, rgba(156, 186, 229, 0.18), rgba(106, 143, 202, 0.08));
+  box-shadow: 0 16px 44px rgba(52, 86, 141, 0.2);
+}
+
+.hero-plate-a {
+  transform: translateZ(6px) rotate(8deg);
+  animation: plateFloatA 6.5s ease-in-out infinite;
+}
+
+.hero-plate-b {
+  inset: 20%;
+  transform: translateZ(44px) rotate(-13deg);
+  animation: plateFloatB 8.2s ease-in-out infinite;
+}
+
+.hero-ring {
+  position: absolute;
+  inset: 9%;
+  border-radius: 50%;
+  border: 2px dashed rgba(82, 115, 175, 0.62);
+  transform: translateZ(68px);
+  animation: heroSpin 9.2s linear infinite;
+}
+
+.hero-core {
+  position: absolute;
+  inset: 34%;
+  border-radius: 50%;
+  transform: translateZ(108px);
+  background: radial-gradient(circle at 30% 30%, #ffffff, #9dbce8 46%, #5f8ccf 70%);
+  box-shadow: 0 0 20px rgba(93, 139, 210, 0.6), 0 0 60px rgba(104, 139, 202, 0.36);
+  animation: corePulse 1.45s ease-in-out infinite alternate;
+}
+
+@keyframes plateFloatA {
+  0%,
+  100% {
+    transform: translateZ(6px) rotate(8deg) translateY(0);
+  }
+  50% {
+    transform: translateZ(26px) rotate(5deg) translateY(-10px);
+  }
+}
+
+@keyframes plateFloatB {
+  0%,
+  100% {
+    transform: translateZ(44px) rotate(-13deg) translateY(0);
+  }
+  50% {
+    transform: translateZ(62px) rotate(-18deg) translateY(10px);
+  }
+}
+
+@keyframes heroSpin {
+  from {
+    transform: translateZ(68px) rotate(0deg);
+  }
+  to {
+    transform: translateZ(68px) rotate(360deg);
+  }
+}
+
+@keyframes corePulse {
+  from {
+    transform: translateZ(108px) scale(0.94);
+  }
+  to {
+    transform: translateZ(108px) scale(1.08);
+  }
+}
+
 @keyframes riseIn {
   to {
     opacity: 1;
@@ -253,6 +362,13 @@ main {
   border-radius: 999px;
   padding: 10px 16px;
   box-shadow: 0 4px 14px rgba(40, 62, 96, 0.08);
+  transition: transform 180ms ease, box-shadow 180ms ease;
+  will-change: transform;
+}
+
+.metric:hover {
+  transform: translateY(-3px) scale(1.02);
+  box-shadow: 0 10px 24px rgba(42, 70, 112, 0.24);
 }
 
 .metric-value {
@@ -285,12 +401,30 @@ main {
   color: #3f567a;
   font-size: 0.84rem;
   transition: transform 180ms ease, border-color 180ms ease, background 180ms ease;
+  position: relative;
+  overflow: hidden;
 }
 
 .scenario-pill:hover {
-  transform: translateY(-2px);
+  transform: translateY(-2px) scale(1.03);
   border-color: rgba(67, 98, 146, 0.5);
   background: rgba(86, 120, 178, 0.12);
+}
+
+.scenario-pill::after {
+  content: "";
+  position: absolute;
+  width: 30%;
+  height: 180%;
+  top: -40%;
+  left: -38%;
+  transform: rotate(24deg);
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.68), transparent);
+  transition: left 280ms ease;
+}
+
+.scenario-pill:hover::after {
+  left: 120%;
 }
 
 .layout {
@@ -362,7 +496,7 @@ main {
   line-height: 1.34;
   font-size: 0.86rem;
   border: 1px solid transparent;
-  transition: color 140ms ease, background 140ms ease, border-color 140ms ease;
+  transition: color 140ms ease, background 140ms ease, border-color 140ms ease, transform 140ms ease;
 }
 
 .toc-link.depth-3 {
@@ -375,6 +509,7 @@ main {
   color: #1f365a;
   border-color: rgba(91, 124, 173, 0.42);
   background: rgba(114, 145, 193, 0.14);
+  transform: translateX(2px);
 }
 
 .doc-content {
@@ -394,6 +529,7 @@ main {
   margin: 0;
   padding: clamp(18px, 3vw, 34px) 0;
   border-top: 1px solid rgba(138, 196, 217, 0.2);
+  transform-style: preserve-3d;
 }
 
 .doc-section:first-child {
@@ -601,6 +737,29 @@ main {
   transform: translateY(-2px);
 }
 
+.shockwave {
+  position: fixed;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  border: 2px solid rgba(83, 120, 184, 0.8);
+  transform: translate(-50%, -50%) scale(0.2);
+  pointer-events: none;
+  z-index: 18;
+  animation: shockOut 520ms ease-out forwards;
+}
+
+@keyframes shockOut {
+  0% {
+    opacity: 0.85;
+    transform: translate(-50%, -50%) scale(0.2);
+  }
+  100% {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(11);
+  }
+}
+
 @media (max-width: 1080px) {
   .layout {
     grid-template-columns: 1fr;
@@ -641,6 +800,12 @@ main {
     padding-top: 36px;
   }
 
+  .hero-3d {
+    right: -46px;
+    width: 240px;
+    opacity: 0.5;
+  }
+
   main {
     width: calc(100% - 14px);
   }
@@ -657,5 +822,20 @@ main {
   .scenario-pill {
     width: 100%;
     text-align: center;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  #fx-canvas {
+    display: none;
+  }
+
+  .hero-plate-a,
+  .hero-plate-b,
+  .hero-ring,
+  .hero-core,
+  .ambient-a,
+  .ambient-b {
+    animation: none !important;
   }
 }
