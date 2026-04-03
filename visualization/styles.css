@@ -45,12 +45,7 @@ a {
 }
 
 .ambient {
-  position: fixed;
-  border-radius: 50%;
-  filter: blur(80px);
-  pointer-events: none;
-  z-index: -3;
-  opacity: 0.18;
+  display: none;
 }
 
 .ambient-a {
