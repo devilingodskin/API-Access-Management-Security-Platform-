@@ -1,55 +1,4 @@
-const statusLine = document.getElementById("status-line");
 const authorCards = [...document.querySelectorAll(".author-card")];
-const yearNode = document.getElementById("year");
-
-if (yearNode) {
-  yearNode.textContent = new Date().getFullYear().toString();
-}
-
-function typeLine(text, speed = 22) {
-  return new Promise((resolve) => {
-    if (!statusLine) {
-      resolve();
-      return;
-    }
-
-    let i = 0;
-    const step = () => {
-      statusLine.textContent = text.slice(0, i);
-      i += 1;
-      if (i <= text.length) {
-        setTimeout(step, speed);
-      } else {
-        resolve();
-      }
-    };
-    step();
-  });
-}
-
-function wait(ms) {
-  return new Promise((resolve) => setTimeout(resolve, ms));
-}
-
-async function runStatusLoop() {
-  if (!statusLine) {
-    return;
-  }
-
-  const lines = [
-    "> уважение авторам: initialized",
-    "> благодарность за каждый фикс: active",
-    "> стабильность проекта: maintained",
-    "> человеческий ресурс: держится на уважении",
-  ];
-
-  while (true) {
-    for (const line of lines) {
-      await typeLine(line);
-      await wait(950);
-    }
-  }
-}
 
 function emitLike(x, y, text = "👍") {
   const node = document.createElement("span");
@@ -70,13 +19,12 @@ function launchRespectWave(card, event) {
   const rect = card.getBoundingClientRect();
   const baseX = event.clientX || rect.left + rect.width / 2;
   const baseY = event.clientY || rect.top + rect.height / 2;
-  const likes = ["👍", "👍", "👍", "👍", "👍", "👍", "👍"];
 
-  likes.forEach((icon, index) => {
+  for (let i = 0; i < 8; i += 1) {
     setTimeout(() => {
-      emitLike(baseX + (Math.random() - 0.5) * 34, baseY + (Math.random() - 0.5) * 18, icon);
-    }, index * 55);
-  });
+      emitLike(baseX + (Math.random() - 0.5) * 36, baseY + (Math.random() - 0.5) * 20);
+    }, i * 52);
+  }
 }
 
 function setupAuthorCardRespect() {
@@ -87,5 +35,4 @@ function setupAuthorCardRespect() {
   });
 }
 
-runStatusLoop();
 setupAuthorCardRespect();
