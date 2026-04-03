@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="ru">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>API Access Management - Visual Case</title>
+    <meta
+      name="description"
+      content="Визуальная интерактивная версия кейса API Access Management с анимациями и структурированной навигацией."
+    />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;700;800&family=Space+Grotesk:wght@500;700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <div class="ambient ambient-a" aria-hidden="true"></div>
+    <div class="ambient ambient-b" aria-hidden="true"></div>
+    <div class="grain" aria-hidden="true"></div>
+
+    <header class="topbar">
+      <div class="topbar-brand">
+        <span class="brand-dot"></span>
+        <span class="brand-label">Security Platform Visual</span>
+      </div>
+      <a class="topbar-link" href="../API_Access_Management_Case.md" target="_blank" rel="noreferrer">Открыть исходный .md</a>
+    </header>
+
+    <div class="progress-wrap" aria-hidden="true">
+      <div id="scroll-progress"></div>
+    </div>
+
+    <main>
+      <section class="hero">
+        <p class="hero-eyebrow">API Access Management</p>
+        <h1>Инженерный кейс, который читается как продукт</h1>
+        <p class="hero-copy">
+          Интерактивная визуализация для полного markdown-документа: контекст, сценарии, требования, архитектура,
+          интерфейсы, риски и V&V с плавной кинематикой при скролле.
+        </p>
+        <div id="metric-strip" class="metric-strip" aria-label="Метрики кейса"></div>
+        <div id="scenario-rail" class="scenario-rail" aria-label="Сценарии"></div>
+      </section>
+
+      <section class="layout">
+        <aside class="toc" aria-label="Оглавление">
+          <p class="toc-title">Навигация</p>
+          <nav id="toc-items"></nav>
+        </aside>
+        <article id="doc-content" class="doc-content" aria-live="polite">
+          <p class="loading">Загружаю и визуализирую markdown...</p>
+        </article>
+      </section>
+    </main>
+
+    <button id="to-top" class="to-top" type="button" aria-label="Наверх">Наверх</button>
+
+    <script src="./case-markdown.js"></script>
+    <script src="./app.js"></script>
+  </body>
+</html>
