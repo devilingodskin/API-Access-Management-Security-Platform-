@@ -430,23 +430,74 @@ function setupRevealAnimations() {
 
 function setupActiveToc() {
   const links = [...toc.querySelectorAll(".toc-link")];
+  const headings = [...content.querySelectorAll("h2, h3")];
   const byId = new Map(links.map((link) => [link.getAttribute("href").slice(1), link]));
+  const tocPanel = document.querySelector(".toc");
+  let activeId = null;
+  let ticking = false;
 
-  const observer = new IntersectionObserver(
-    (entries) => {
-      entries.forEach((entry) => {
-        if (!entry.isIntersecting) {
-          return;
-        }
-        const id = entry.target.id;
-        links.forEach((link) => link.classList.remove("active"));
-        byId.get(id)?.classList.add("active");
-      });
-    },
-    { rootMargin: "-26% 0px -58% 0px", threshold: 0.01 },
-  );
+  if (!links.length || !headings.length) {
+    return;
+  }
 
-  content.querySelectorAll("h2, h3").forEach((heading) => observer.observe(heading));
+  const ensureVisible = (link) => {
+    if (!link || !tocPanel) {
+      return;
+    }
+
+    const pad = 20;
+    const linkTop = link.offsetTop;
+    const linkBottom = linkTop + link.offsetHeight;
+    const viewTop = tocPanel.scrollTop;
+    const viewBottom = viewTop + tocPanel.clientHeight;
+
+    if (linkTop - pad < viewTop) {
+      tocPanel.scrollTo({ top: Math.max(linkTop - pad, 0), behavior: "smooth" });
+      return;
+    }
+
+    if (linkBottom + pad > viewBottom) {
+      tocPanel.scrollTo({ top: linkBottom - tocPanel.clientHeight + pad, behavior: "smooth" });
+    }
+  };
+
+  const setActive = (id) => {
+    if (!id || id === activeId) {
+      return;
+    }
+
+    activeId = id;
+    links.forEach((link) => link.classList.toggle("active", link.getAttribute("href") === `#${id}`));
+    ensureVisible(byId.get(id));
+  };
+
+  const syncActiveLink = () => {
+    const threshold = 130;
+    let currentId = headings[0].id;
+
+    for (const heading of headings) {
+      if (heading.getBoundingClientRect().top <= threshold) {
+        currentId = heading.id;
+      } else {
+        break;
+      }
+    }
+
+    setActive(currentId);
+    ticking = false;
+  };
+
+  const onScroll = () => {
+    if (ticking) {
+      return;
+    }
+    ticking = true;
+    requestAnimationFrame(syncActiveLink);
+  };
+
+  window.addEventListener("scroll", onScroll, { passive: true });
+  window.addEventListener("resize", onScroll);
+  syncActiveLink();
 }
 
 function setupScrollUI() {
