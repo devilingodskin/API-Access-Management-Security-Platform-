@@ -618,14 +618,7 @@ function setup3DTilts() {
 }
 
 function setupBoomFx() {
-  if (!fxCanvas) {
-    return;
-  }
-
-  const context = fxCanvas.getContext("2d");
-  if (!context) {
-    return;
-  }
+  const context = fxCanvas ? fxCanvas.getContext("2d") : null;
 
   const particles = [];
   const maxParticles = 560;
@@ -640,9 +633,11 @@ function setupBoomFx() {
     dpr = Math.max(1, Math.min(window.devicePixelRatio || 1, 2));
     width = window.innerWidth;
     height = window.innerHeight;
-    fxCanvas.width = Math.floor(width * dpr);
-    fxCanvas.height = Math.floor(height * dpr);
-    context.setTransform(dpr, 0, 0, dpr, 0, 0);
+    if (fxCanvas && context) {
+      fxCanvas.width = Math.floor(width * dpr);
+      fxCanvas.height = Math.floor(height * dpr);
+      context.setTransform(dpr, 0, 0, dpr, 0, 0);
+    }
   };
 
   const emit = (x, y, count, power = 1) => {
@@ -677,8 +672,10 @@ function setupBoomFx() {
   };
 
   const draw = () => {
-    context.clearRect(0, 0, width, height);
-    context.globalCompositeOperation = "lighter";
+    if (context) {
+      context.clearRect(0, 0, width, height);
+      context.globalCompositeOperation = "lighter";
+    }
 
     for (let i = particles.length - 1; i >= 0; i -= 1) {
       const particle = particles[i];
@@ -695,19 +692,54 @@ function setupBoomFx() {
       particle.vy += 0.016;
 
       const alpha = particle.life / particle.maxLife;
-      context.globalAlpha = alpha;
-      context.fillStyle = particle.color;
-      context.beginPath();
-      context.arc(particle.x, particle.y, particle.radius + (1 - alpha) * 2.4, 0, Math.PI * 2);
-      context.fill();
+      if (context) {
+        context.globalAlpha = alpha;
+        context.fillStyle = particle.color;
+        context.beginPath();
+        context.arc(particle.x, particle.y, particle.radius + (1 - alpha) * 2.4, 0, Math.PI * 2);
+        context.fill();
+      }
     }
 
-    context.globalAlpha = 1;
+    if (context) {
+      context.globalAlpha = 1;
+    }
     requestAnimationFrame(draw);
   };
 
+  const domBlast = (x, y, intensity = 1) => {
+    const flash = document.createElement("span");
+    flash.className = "boom-flash";
+    flash.style.left = `${x}px`;
+    flash.style.top = `${y}px`;
+    document.body.appendChild(flash);
+    setTimeout(() => flash.remove(), 520);
+
+    const fragments = Math.round(8 + intensity * 8);
+    for (let i = 0; i < fragments; i += 1) {
+      const frag = document.createElement("span");
+      const angle = Math.random() * Math.PI * 2;
+      const distance = 36 + Math.random() * (90 * intensity);
+      frag.className = "boom-frag";
+      frag.style.left = `${x}px`;
+      frag.style.top = `${y}px`;
+      frag.style.setProperty("--boom-x", `${Math.cos(angle) * distance}px`);
+      frag.style.setProperty("--boom-y", `${Math.sin(angle) * distance}px`);
+      frag.style.setProperty("--boom-rot", `${Math.random() * 180}deg`);
+      document.body.appendChild(frag);
+      setTimeout(() => frag.remove(), 700);
+    }
+
+    document.body.classList.remove("screen-shake");
+    requestAnimationFrame(() => {
+      document.body.classList.add("screen-shake");
+      setTimeout(() => document.body.classList.remove("screen-shake"), 220);
+    });
+  };
+
   document.addEventListener("pointerdown", (event) => {
-    emit(event.clientX, event.clientY, 58, 1.55);
+    domBlast(event.clientX, event.clientY, 1.2);
+    emit(event.clientX, event.clientY, 68, 1.75);
     shockwave(event.clientX, event.clientY);
   });
 
@@ -723,7 +755,7 @@ function setupBoomFx() {
       if (delta > 90) {
         const x = width * (0.25 + Math.random() * 0.5);
         const y = height * (0.1 + Math.random() * 0.3);
-        emit(x, y, 24, 1.05);
+        emit(x, y, 28, 1.15);
         scrollCooldown = 2;
       }
     },
@@ -737,13 +769,19 @@ function setupBoomFx() {
         return;
       }
       const rect = target.getBoundingClientRect();
-      emit(rect.left + rect.width / 2, rect.top + rect.height / 2, 16, 0.95);
+      const cx = rect.left + rect.width / 2;
+      const cy = rect.top + rect.height / 2;
+      domBlast(cx, cy, 0.6);
+      emit(cx, cy, 20, 1.05);
     });
   }
 
   setTimeout(() => {
-    emit(width * 0.62, Math.min(260, height * 0.32), 120, 1.7);
-    shockwave(width * 0.62, Math.min(260, height * 0.32));
+    const x = width * 0.62;
+    const y = Math.min(260, height * 0.32);
+    domBlast(x, y, 1.4);
+    emit(x, y, 140, 1.95);
+    shockwave(x, y);
   }, 260);
 
   window.setInterval(() => {

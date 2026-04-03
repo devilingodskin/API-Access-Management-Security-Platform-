@@ -751,6 +751,80 @@ main {
   animation: shockOut 520ms ease-out forwards;
 }
 
+.boom-flash {
+  position: fixed;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  pointer-events: none;
+  z-index: 92;
+  transform: translate(-50%, -50%) scale(0.2);
+  background: radial-gradient(circle, rgba(255, 255, 255, 0.95), rgba(255, 201, 153, 0.7), rgba(255, 125, 80, 0));
+  box-shadow: 0 0 26px rgba(255, 150, 93, 0.8);
+  animation: flashBoom 460ms ease-out forwards;
+}
+
+.boom-frag {
+  position: fixed;
+  width: 8px;
+  height: 8px;
+  border-radius: 2px;
+  pointer-events: none;
+  z-index: 91;
+  transform: translate(-50%, -50%);
+  background: linear-gradient(145deg, #ffe6c4, #ff8b57);
+  box-shadow: 0 0 10px rgba(255, 133, 84, 0.85);
+  animation: fragFly 620ms ease-out forwards;
+}
+
+body.screen-shake {
+  animation: screenShake 200ms linear;
+}
+
+@keyframes flashBoom {
+  0% {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(0.2);
+  }
+  100% {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(8.8);
+  }
+}
+
+@keyframes fragFly {
+  0% {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1) rotate(var(--boom-rot, 0deg));
+  }
+  100% {
+    opacity: 0;
+    transform: translate(calc(-50% + var(--boom-x, 0px)), calc(-50% + var(--boom-y, 0px))) scale(0.1)
+      rotate(calc(var(--boom-rot, 0deg) + 220deg));
+  }
+}
+
+@keyframes screenShake {
+  0% {
+    transform: translate(0, 0);
+  }
+  20% {
+    transform: translate(-2px, 1px);
+  }
+  40% {
+    transform: translate(2px, -1px);
+  }
+  60% {
+    transform: translate(-1px, -2px);
+  }
+  80% {
+    transform: translate(1px, 2px);
+  }
+  100% {
+    transform: translate(0, 0);
+  }
+}
+
 @keyframes shockOut {
   0% {
     opacity: 0.95;
