@@ -433,31 +433,46 @@ function setupActiveToc() {
   const headings = [...content.querySelectorAll("h2, h3")];
   const byId = new Map(links.map((link) => [link.getAttribute("href").slice(1), link]));
   const tocPanel = document.querySelector(".toc");
+  const indicator = document.createElement("span");
+  indicator.className = "toc-indicator";
+  toc.prepend(indicator);
   let activeId = null;
   let ticking = false;
 
   if (!links.length || !headings.length) {
+    indicator.remove();
     return;
   }
+
+  const moveIndicator = (link) => {
+    if (!link) {
+      indicator.style.opacity = "0";
+      return;
+    }
+
+    indicator.style.height = `${link.offsetHeight}px`;
+    indicator.style.transform = `translateY(${link.offsetTop}px)`;
+    indicator.style.opacity = "1";
+  };
 
   const ensureVisible = (link) => {
     if (!link || !tocPanel) {
       return;
     }
 
-    const pad = 20;
-    const linkTop = link.offsetTop;
-    const linkBottom = linkTop + link.offsetHeight;
-    const viewTop = tocPanel.scrollTop;
-    const viewBottom = viewTop + tocPanel.clientHeight;
+    const pad = 14;
+    const panelRect = tocPanel.getBoundingClientRect();
+    const linkRect = link.getBoundingClientRect();
+    const topDelta = linkRect.top - (panelRect.top + pad);
 
-    if (linkTop - pad < viewTop) {
-      tocPanel.scrollTo({ top: Math.max(linkTop - pad, 0), behavior: "smooth" });
+    if (topDelta < 0) {
+      tocPanel.scrollBy({ top: topDelta, behavior: "smooth" });
       return;
     }
 
-    if (linkBottom + pad > viewBottom) {
-      tocPanel.scrollTo({ top: linkBottom - tocPanel.clientHeight + pad, behavior: "smooth" });
+    const bottomDelta = linkRect.bottom - (panelRect.bottom - pad);
+    if (bottomDelta > 0) {
+      tocPanel.scrollBy({ top: bottomDelta, behavior: "smooth" });
     }
   };
 
@@ -468,7 +483,9 @@ function setupActiveToc() {
 
     activeId = id;
     links.forEach((link) => link.classList.toggle("active", link.getAttribute("href") === `#${id}`));
-    ensureVisible(byId.get(id));
+    const activeLink = byId.get(id);
+    moveIndicator(activeLink);
+    ensureVisible(activeLink);
   };
 
   const syncActiveLink = () => {
