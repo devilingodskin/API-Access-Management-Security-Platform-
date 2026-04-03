@@ -1,0 +1,130 @@
+<!doctype html>
+<html lang="ru">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Авторы - API Access Management</title>
+    <meta
+      name="description"
+      content="Страница авторов проекта API Access Management в шуточном формате: как тяжело дались markdown и сайт."
+    />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;700;800&family=Space+Grotesk:wght@500;700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="./authors.css" />
+  </head>
+  <body>
+    <canvas id="chaos-canvas" aria-hidden="true"></canvas>
+    <div class="blob blob-a" aria-hidden="true"></div>
+    <div class="blob blob-b" aria-hidden="true"></div>
+
+    <header class="topbar">
+      <div class="brand">
+        <span class="brand-dot"></span>
+        <span class="brand-text">Команда Проекта</span>
+      </div>
+      <nav class="actions">
+        <a class="link" href="./index.html">К кейсу</a>
+        <a class="link" href="../API_Access_Management_Case.md" target="_blank" rel="noreferrer">Исходный .md</a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="hero">
+        <p class="eyebrow">Страница авторов</p>
+        <h1>Как мы выживали, пока делали markdown и сайт</h1>
+        <p class="lead">
+          Эта страница документирует не только архитектуру, но и уровень моральной стойкости команды после сотен
+          требований, правок и анимаций.
+        </p>
+
+        <div class="stats">
+          <article class="stat">
+            <p class="stat-value" data-target="187">0</p>
+            <p class="stat-label">Часов в режиме "еще один фикс"</p>
+          </article>
+          <article class="stat">
+            <p class="stat-value" data-target="643">0</p>
+            <p class="stat-label">Кружек кофе и чая</p>
+          </article>
+          <article class="stat">
+            <p class="stat-value" data-target="94">0</p>
+            <p class="stat-label">Коммитов с "final-final" в названии</p>
+          </article>
+        </div>
+
+        <div class="panic-panel">
+          <p class="panic-title">Индекс турбулентности релиза</p>
+          <div class="panic-track">
+            <div id="panic-fill" class="panic-fill"></div>
+          </div>
+          <p class="panic-meta">
+            Уровень: <span id="panic-value">0</span>/100
+            <span class="pulse" aria-hidden="true"></span>
+          </p>
+        </div>
+      </section>
+
+      <section class="timeline">
+        <h2>Хроника героизма</h2>
+        <ol>
+          <li>
+            <span class="phase">Фаза 1</span>
+            <p>Собрали контекст, пока требования размножались быстрее, чем разделы в документе.</p>
+          </li>
+          <li>
+            <span class="phase">Фаза 2</span>
+            <p>Победили таблицы, схемы и сценарии S1-S5 без потери связи с реальностью.</p>
+          </li>
+          <li>
+            <span class="phase">Фаза 3</span>
+            <p>Собрали сайт, а затем пять раз переделали визуал, потому что "надо еще мощнее".</p>
+          </li>
+          <li>
+            <span class="phase">Фаза 4</span>
+            <p>Дополировали анимации так, чтобы всё летало, но не ломало UX.</p>
+          </li>
+        </ol>
+      </section>
+
+      <section class="authors">
+        <h2>Авторы</h2>
+        <p class="authors-note">Нажми на карточку автора, чтобы активировать мини-вспышку уважения.</p>
+        <div class="author-grid">
+          <article class="author-card" data-intensity="1.1">
+            <h3>Колтунов Н.А.</h3>
+            <p class="role">Архитектурный фронт и системная связность</p>
+            <p class="quote">"Если требование не трассируется, значит оно просто ждет своего часа".</p>
+          </article>
+          <article class="author-card" data-intensity="1.2">
+            <h3>Гришин Н.Л.</h3>
+            <p class="role">Конвейер сценариев, рисков и V&V</p>
+            <p class="quote">"Каждый баг - это просто ненаписанный раздел аудита".</p>
+          </article>
+          <article class="author-card" data-intensity="1.4">
+            <h3>Альшин Р.О..</h3>
+            <p class="role">Визуализация и анимационный штурм</p>
+            <p class="quote">"Если не бахает, значит это еще не финальный релиз".</p>
+          </article>
+        </div>
+      </section>
+
+      <section class="terminal">
+        <p class="terminal-title">Лог статуса команды</p>
+        <p id="status-line" class="status-line"></p>
+      </section>
+    </main>
+
+    <footer class="footer">
+      <p>
+        Сделано с уважением к дедлайнам и с легкой иронией к собственным ночным правкам.
+        <span id="year"></span>
+      </p>
+    </footer>
+
+    <script src="./authors.js"></script>
+  </body>
+</html>

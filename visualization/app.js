@@ -618,50 +618,6 @@ function setup3DTilts() {
 }
 
 function setupBoomFx() {
-  const context = fxCanvas ? fxCanvas.getContext("2d") : null;
-
-  const particles = [];
-  const maxParticles = 560;
-  let width = 0;
-  let height = 0;
-  let dpr = 1;
-  let lastScrollY = window.scrollY;
-  let scrollCooldown = 0;
-  const palette = ["#8cb4f8", "#5f8ccf", "#d4e7ff", "#6e9cf0", "#ffb58a", "#8af2ff", "#ffffff"];
-
-  const resize = () => {
-    dpr = Math.max(1, Math.min(window.devicePixelRatio || 1, 2));
-    width = window.innerWidth;
-    height = window.innerHeight;
-    if (fxCanvas && context) {
-      fxCanvas.width = Math.floor(width * dpr);
-      fxCanvas.height = Math.floor(height * dpr);
-      context.setTransform(dpr, 0, 0, dpr, 0, 0);
-    }
-  };
-
-  const emit = (x, y, count, power = 1) => {
-    for (let i = 0; i < count; i += 1) {
-      const angle = Math.random() * Math.PI * 2;
-      const speed = (1.8 + Math.random() * 6.4) * power;
-      const life = 34 + Math.random() * 52;
-      particles.push({
-        x,
-        y,
-        vx: Math.cos(angle) * speed,
-        vy: Math.sin(angle) * speed,
-        radius: 1.2 + Math.random() * 3.2,
-        life,
-        maxLife: life,
-        color: palette[(Math.random() * palette.length) | 0],
-      });
-    }
-
-    if (particles.length > maxParticles) {
-      particles.splice(0, particles.length - maxParticles);
-    }
-  };
-
   const shockwave = (x, y) => {
     const node = document.createElement("span");
     node.className = "shockwave";
@@ -669,42 +625,6 @@ function setupBoomFx() {
     node.style.top = `${y}px`;
     document.body.appendChild(node);
     setTimeout(() => node.remove(), 560);
-  };
-
-  const draw = () => {
-    if (context) {
-      context.clearRect(0, 0, width, height);
-      context.globalCompositeOperation = "lighter";
-    }
-
-    for (let i = particles.length - 1; i >= 0; i -= 1) {
-      const particle = particles[i];
-      particle.life -= 1;
-      if (particle.life <= 0) {
-        particles.splice(i, 1);
-        continue;
-      }
-
-      particle.x += particle.vx;
-      particle.y += particle.vy;
-      particle.vx *= 0.983;
-      particle.vy *= 0.983;
-      particle.vy += 0.016;
-
-      const alpha = particle.life / particle.maxLife;
-      if (context) {
-        context.globalAlpha = alpha;
-        context.fillStyle = particle.color;
-        context.beginPath();
-        context.arc(particle.x, particle.y, particle.radius + (1 - alpha) * 2.4, 0, Math.PI * 2);
-        context.fill();
-      }
-    }
-
-    if (context) {
-      context.globalAlpha = 1;
-    }
-    requestAnimationFrame(draw);
   };
 
   const domBlast = (x, y) => {
@@ -718,28 +638,8 @@ function setupBoomFx() {
 
   document.addEventListener("pointerdown", (event) => {
     domBlast(event.clientX, event.clientY);
-    emit(event.clientX, event.clientY, 68, 1.75);
     shockwave(event.clientX, event.clientY);
   });
-
-  document.addEventListener(
-    "scroll",
-    () => {
-      const delta = Math.abs(window.scrollY - lastScrollY);
-      lastScrollY = window.scrollY;
-      if (scrollCooldown > 0) {
-        scrollCooldown -= 1;
-        return;
-      }
-      if (delta > 90) {
-        const x = width * (0.25 + Math.random() * 0.5);
-        const y = height * (0.1 + Math.random() * 0.3);
-        emit(x, y, 28, 1.15);
-        scrollCooldown = 2;
-      }
-    },
-    { passive: true },
-  );
 
   if (scenarioRail) {
     scenarioRail.addEventListener("pointerover", (event) => {
@@ -751,25 +651,8 @@ function setupBoomFx() {
       const cx = rect.left + rect.width / 2;
       const cy = rect.top + rect.height / 2;
       domBlast(cx, cy);
-      emit(cx, cy, 20, 1.05);
     });
   }
-
-  setTimeout(() => {
-    const x = width * 0.62;
-    const y = Math.min(260, height * 0.32);
-    domBlast(x, y);
-    emit(x, y, 140, 1.95);
-    shockwave(x, y);
-  }, 260);
-
-  window.setInterval(() => {
-    emit(width * (0.2 + Math.random() * 0.6), height * (0.12 + Math.random() * 0.25), 18, 0.88);
-  }, 1800);
-
-  window.addEventListener("resize", resize);
-  resize();
-  draw();
 }
 
 function renderError(message) {
